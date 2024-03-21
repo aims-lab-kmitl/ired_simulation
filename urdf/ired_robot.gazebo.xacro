@@ -1,5 +1,5 @@
-<?xml version="1.0" ?>
-<robot name="ired_robot_gazebo" xmlns:xacro="http://ros.org/wiki/xacro">
+<?xml version="1.0"?>
+<robot name="ired_gazebo" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:arg name="laser_visual" default="false"/>
   <xacro:arg name="imu_visual"   default="false"/>
 
@@ -29,25 +29,92 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
+  <gazebo reference="caster_front_link">
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <gazebo reference="caster_back_link">
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <gazebo reference="imu_link">
+    <sensor type="imu" name="imu">
+      <always_on>true</always_on>
+      <visualize>$(arg imu_visual)</visualize>
+    </sensor>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
   <gazebo>
-    <plugin filename="libgazebo_ros_diff_drive.so" name="differential_drive_controller">
-      <alwaysOn>true</alwaysOn>
-      <updateRate>10</updateRate>
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <updateRate>5</updateRate>
+      <rosDebugLevel>info</rosDebugLevel>
       <leftJoint>wheel_left_joint</leftJoint>
       <rightJoint>wheel_right_joint</rightJoint>
-      <wheelSeparation>0.197</wheelSeparation>
+      <wheelSeparation>0.199</wheelSeparation>
       <wheelDiameter>0.072</wheelDiameter>
-      <torque>15</torque>
+      <wheelAcceleration>1.0</wheelAcceleration>
+      <wheelTorque>20</wheelTorque>
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
       <robotBaseFrame>base_footprint</robotBaseFrame>
+      <odometrySource>encoder</odometrySource>
+      <publishWheelTF>false</publishWheelTF> <!-- Set to false to prevent wheel TFs from being published -->
+      <publishOdom>true</publishOdom>
+      <publishOdomTF>true</publishOdomTF> <!-- Keep true if you need the odom to base_footprint TF -->
+      <publishWheelJointState>true</publishWheelJointState>
+      <legacyMode>false</legacyMode>
+      <publishTf>true</publishTf> <!-- Adjust based on your needs and plugin version -->
+    </plugin>
+  </gazebo>
+
+
+
+  <gazebo>
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+      <alwaysOn>true</alwaysOn>
+      <bodyName>imu_link</bodyName>
+      <frameName>imu_link</frameName>
+      <topicName>imu</topicName>
+      <serviceName>imu_service</serviceName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <updateRate>0</updateRate>
+      <imu>
+        <noise>
+          <type>gaussian</type>
+          <rate>
+            <mean>0.0</mean>
+            <stddev>2e-4</stddev>
+            <bias_mean>0.0000075</bias_mean>
+            <bias_stddev>0.0000008</bias_stddev>
+          </rate>
+          <accel>
+            <mean>0.0</mean>
+            <stddev>1.7e-2</stddev>
+            <bias_mean>0.1</bias_mean>
+            <bias_stddev>0.001</bias_stddev>
+          </accel>
+        </noise>
+      </imu>
     </plugin>
   </gazebo>
 
   <gazebo reference="base_scan">
     <material>Gazebo/FlatBlack</material>
-    <sensor name="lidar_sensor" type="ray">
+    <sensor type="ray" name="lds_lfcd_sensor">
       <pose>0 0 0 0 0 0</pose>
       <visualize>$(arg laser_visual)</visualize>
       <update_rate>5</update_rate>
@@ -61,8 +128,8 @@
           </horizontal>
         </scan>
         <range>
-          <min>0.12</min>
-          <max>12.0</max>
+          <min>0.25</min>
+          <max>3.5</max>
           <resolution>0.015</resolution>
         </range>
         <noise>
@@ -71,37 +138,11 @@
           <stddev>0.01</stddev>
         </noise>
       </ray>
-      <plugin filename="libgazebo_ros_laser.so" name="gazebo_ros_laser_controller">
-        <topicName>/scan</topicName>
+      <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
         <frameName>base_scan</frameName>
       </plugin>
     </sensor>
   </gazebo>
 
-  <gazebo reference="imu_link">
-    <material>Gazebo/FlatBlack</material>
-    <sensor name="imu_sensor" type="imu">
-      <always_on>true</always_on>
-      <visualize>$(arg imu_visual)</visualize>
-      <update_rate>0</update_rate>
-      <imu>
-        <angular_velocity>
-          <x>0.0</x>
-          <y>0.0</y>
-          <z>0.0</z>
-        </angular_velocity>
-        <linear_acceleration>
-          <x>0.0</x>
-          <y>0.0</y>
-          <z>0.0</z>
-        </linear_acceleration>
-      </imu>
-      <plugin filename="libgazebo_ros_imu.so" name="gazebo_ros_imu_controller">
-        <topicName>/imu</topicName>
-        <frameName>imu_link</frameName>
-      </plugin>
-    </sensor>
-  </gazebo>
-
 </robot>
-

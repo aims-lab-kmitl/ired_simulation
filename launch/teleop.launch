@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="topic" default="/cmd_vel"/>
+
+    <node name="ired_teleop_node" pkg="ired_simulation" type="teleop.py"  output="screen">
+        <param name="topic" value="$(arg topic)"/>
+    </node>
+
+</launch>
